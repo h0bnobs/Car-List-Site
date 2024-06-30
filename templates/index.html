@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>eBay Listings</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        .listing {
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin: 10px 0;
+        }
+        .listing h3 {
+            margin: 0;
+        }
+        .listing p {
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>eBay Listings</h1>
+    <div id="listings-container">
+        {% for item in items %}
+            <div class="listing" data-price="{{ item.price }}">
+                <h3>{{ item.title }}</h3>
+                <p>Category: {{ item.cat }}</p>
+                <p>Price: £{{ item.price }}</p>
+                <p>Seller: {{ item.seller }}</p>
+                <p><a href="{{ item.url }}" target="_blank">View Item</a></p>
+            </div>
+        {% endfor %}
+    </div>
+    <script>
+        // JavaScript to filter listings based on price
+        document.addEventListener('DOMContentLoaded', function() {
+            const listings = document.querySelectorAll('.listing');
+            listings.forEach(listing => {
+                const price = parseFloat(listing.getAttribute('data-price'));
+                console.log(price)
+                // if (price < 1000) {
+                //     listing.style.display = 'none';
+                // }
+            });
+        });
+    </script>
+</body>
+</html>
