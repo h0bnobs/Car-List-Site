@@ -1,78 +1,36 @@
-import requests
+import sys
+
 from flask import Flask, render_template
-import json
-import datetime
-from ebaysdk.finding import Connection as finding  # install with pip
-from bs4 import BeautifulSoup  # install with pip
-from ebayapi import ebayapi  # My API key
+from ripley import ripley
 
 app = Flask(__name__)
 
 
-# Functions from your provided code
-def get_kw():
-    with open("ebay_search.txt", "r") as f:
-        lines = f.readlines()
-    return [line.strip() for line in lines]
-
-
-def get_items(keyword):
-    # Define the API endpoint and parameters
-    endpoint = 'https://api.ebay.com/buy/browse/v1/item_summary/search'
-    category_id = '9800'  # eBay category ID for cars
-    params = {
-        'q': keyword,
-        'category_ids': category_id,
-        'limit': 30  # You can adjust the limit as needed
-    }
-
-    headers = {
-        'Authorization': f'Bearer v^1.1#i^1#I^3#p^1#r^0#f^0#t^H4sIAAAAAAAAAOVYf2wTVRxft26GwBgyQJ0OyqEQMHe96/Xa3tHWdL/cZrcWWgcMEa9379jR691573XdNOKyIP6IYNQMJSgZgiYEjRJEQBMRTSDGkBBMRNH4hwkEh5igMSRgjHdtGd0kgKyJTew/zfu+7/u+z+fzvt/33j1yoGrSog2tGy5W224rHx4gB8ptNmoyOamq8v6pFeV1lWVkgYNteODeAftgxVk/5FOKzi0FUNdUCBx9KUWFXNYYwNKGymk8lCGn8ikAOSRwsVBHmHMRJKcbGtIETcEcbU0BjGYZkGAE2u2jSYGhPKZVvRIzrpn9pFdyiTQl+GjWR4tusx/CNGhTIeJVFMBcpMuNkx7cxcYphqNozsUSHrevG3N0AQPKmmq6ECQWzMLlsmONAqzXh8pDCAxkBsGCbaGWWCTU1tTcGfc7C2IF8zrEEI/ScGyrUROBo4tX0uD608CsNxdLCwKAEHMGczOMDcqFroC5Bfg5qb0M66XdEsXQgPeJYlGkbNGMFI+uj8OyyCIuZV05oCIZ9d9IUVONxFogoHyr0wzR1uSw/pakeUWWZGAEsOaG0IpQNIoFO/i+Bl4RNVzgDTO/1uLRpU04aWaWQHsYL+5z0UACXiE/Ty5YXuVxEzVqqihbmkFHp4YagAkajJeGLJDGdIqoESMkIQtQoZ93VEJ3t7WmuUVMox7VWlaQMnVwZJs3XoDR0QgZciKNwGiE8R1ZhQIYr+uyiI3vzKZiPnv6YADrQUjnnM5MJkNkaEIz1jhdJEk5l3eEY0IPSPGY5WvVetZfvvEAXM5SEYA5Esoc6tdNLH1mqpoA1DVY0M16GR+T130srOB46z8MBZydYwuiWAXCCjTNMIyX8rAMKXjYYhRIMJ+jTgsHSPD9eIo3kgDpCi8AXDDzLJ0ChixyNCO5aJ8EcNHDSriblSQ8wYgenJIAIAFIJATW9z+qk5vN9BgQDICKk+rFSnO+d7nU3dUZFkS+vYVWwsuQGE1kfCjS1+B5SOfb4x0Nfc2Pd2V6mzKBmy2Ga5JvVGRTmbg5f+nVeqsGERAnRC8maDqIaoos9JfWAtOGGOUN1B8DimIaJkQypOttRdqqi0Xv3+0St0a7iCfUf3M6XZMVtDK2tFhZ46EZgNdlwjp/CEFLOTU+bdU66rHMq7OoJ8RbNq+tJcXaJJljK4u5+yZhUkY9BOwVCANALW2YV20iYt2/4loSqOZxhgxNUYDRRU24nFOpNOITCii1ui5Cgst8iZ21lJdiPV43SbIT4iVkT9LVpbYlFWkntjfewp3aOfYDP1iW/VGDts/JQdun5TYb6Sfvo+aRc6sqHrZXTKmDMgKEzEsElNeo5nerAYgk6Nd52SivLfvtraHWxrrmyOZFT8b7j289Wjal4H1heBV55+gLw6QKanLBcwN5z9WeSqrmjmqXm/S4WIqhaBfbTc672munZtlnzH3jnTOHkp1HZp27ePbZDXvKj9dtaiWrR51stsoy+6CtbP3Cli1HjB+jSeHSnyPPr1R3Ll6y6/DbYfanMqn2dJClPqx9peWujUMIPPPqL8uWXtg7UlMfOLbuxEeZy9P0R2Z/tv2s+7tZxxT/DPv2B07CF86cTnRXbTsM6/f7e/fVnJqz8eSBqWuZacGwb2CKsnPk9k9WTZ8eXUdGuR2RHTs2Jra+OH/219O2rzuyb8/Rl9bvvTDn6GOpj3fbTh34de/wppn1l7+cGTqRXvDU4oOHXq5ntCfaf3+9uX3bez8v8Ca/Pw8vzb87UPP+rvP+RxNfnPMHDny7YuirVQufWeAZ8jv21yaM6s0/PI1/82bvu51h7dhfQeIg9truP55jRnZ94KBXbk4O7nEN9Wx5MLeWfwP5Oa8U+REAAA==',
-        'Content-Type': 'application/json'
-    }
-
-    response = requests.get(endpoint, headers=headers, params=params)
-
-    if response.status_code == 200:
-        items = response.json().get('itemSummaries', [])
-        print("API call successful. Number of items found:", len(items))
-        return items
-    else:
-        print(f"API call failed. Status code: {response.status_code}")
-        print(response.json())
-        return []
-
-# def get_items(Keywords):
-#     api = finding(appid=ebayapi, siteid='EBAY-GB', config_file=None)  # change country with 'siteid='
-#     api_request = {'keywords': Keywords, 'categoryId': 6001, 'outputSelector': 'SellerInfo'}
-#     response = api.execute('findItemsByKeywords', api_request)
-#     soup = BeautifulSoup(response.content, 'lxml')
-#     items = soup.find_all('item')
-#     return items
-
-
-def wr_json(items):
-    tdat = []
-    for item in items:
-        idat = {}
-        idat["cat"] = item.categoryname.string.lower()
-        idat["title"] = item.title.string.lower().strip()
-        idat["price"] = int(round(float(item.currentprice.string)))
-        idat["url"] = item.viewitemurl.string.lower()
-        idat["seller"] = item.sellerusername.text.lower()
-        tdat.append(idat)
-
-    return tdat
-
+# TODO: need to figure out why im only getting a few responses, while when searching on ebay website, i get way more
 
 @app.route('/')
 def index():
-    Keywords = get_kw()
-    all_items = []
-    for keyword in Keywords:
-        items = get_items(keyword)
-        all_items.extend(wr_json(items))
-    return render_template('index.html', items=all_items)
+    api_key = 'v^1.1#i^1#f^0#p^1#I^3#r^0#t^H4sIAAAAAAAAAOVYbWwURRi+a+8gFIqCgFiInNvij5q924/73PQuXr9oaXt39M5aDgmZ3Z1tF/Z2l925Xht+UJqmFSyKIoZE2lSMwQg0/JOg5StRFNGACLFBExM/wg9+YVATY3DvepRrJYD0Ei/x/lzmnXfeeZ5n3ndmdojeOfMqBxoGfi81zy0a7SV6i8xmcj4xb471uYXFRWVWE5HjYB7trei19BVfr9JBQlKZVqiriqxDW3dCknUmY/RjSU1mFKCLOiODBNQZxDHRYEszQ9kJRtUUpHCKhNkaa/2YBwjQ53MTPMkJAqQpwyrfiRlT/JjPJQDa4xNISAHg9ZBGv64nYaOsIyAjP0YRlBMn3DhNxEiScRIM6bJTlDuO2dqgpouKbLjYCSyQgctkxmo5WO8PFeg61JARBAs0Buuj4WBjbV0oVuXIiRXI6hBFACX16a0ahYe2NiAl4f2n0TPeTDTJcVDXMUdgcobpQZngHTCPAD8jNQWdFOBdrI/nWdIngLxIWa9oCYDujyNtEXlcyLgyUEYi6nmQooYa7GbIoWwrZIRorLWl/9YlgSQKItT8WF11cH0wEsECLaC7Gki8gnNAM/JrMx5prcUJF2Q52u3y4F6KhgL0cNl5JoNlVZ4xUY0i82JaM90WUlA1NEDDmdLQOdIYTmE5rAUFlAaU60dPSUjF02s6uYhJ1CmnlxUmDB1smeaDF2BqNEKayCYRnIowsyOjkB8Dqiry2MzOTCpms6db92OdCKmMw5FKpewp2q5oHQ6KIEhHe0tzlOuECSNBDN90rWf8xQcPwMUMFQ4aI3WRQT2qgaXbSFUDgNyBBZw+j8vryuo+HVZgpvUfhhzOjukFka8CYZ0k7XRRkHV7odcglo8CCWRz1JHGAVnQgyeAtgUiVQIcxDkjz5IJqIk8Q7sEivYKEOfdPgF3+gQBZ128GycFCAkIWZbzef9HdfKwmR6FnAZRflI9X2kOutqFeFuomePB2npaan4R8RE25UXh7mp3kwrWxlqqu+u2tqW6alP+hy2Ge5KvkURDmZgxf+HVeoOiI8jPil6UU1QYUSSR6ymsBaY1PgI01BOFkmQYZkUyqKqNedqq80Xv3+0Sj0Y7jyfUf3M63ZOVns7YwmKVHq8bAYAq2tPnj51TEg4FJNO1jjrT5k0Z1LPiLRrX1oJibZCcZCvyk/dNu0EZddr1Ls6uQV1JasZV2x5O379iyhYoG8cZ0hRJglobOetyTiSSCLASLLS6zkOCi6DAzlrSQ/o8To+bnB0vLnOSbiq0LSlPO7Gl5hHu1I7pH/gBU+ZH9pnPEn3mk0VmM1FFrCbLiWfmFL9gKV5QposI2kUg2HWxQza+WzVo3wJ7VCBqRU+Ybh7c11BTVhd+q3JbrOfi2+dMC3LeF0Y3EsunXhjmFZPzc54biJV3e6zkY0+WUk7CTRMk6SRIV5wov9trIZdZlqyurn+t9Yvlw6zpbOrkqvlxbeeyNUTplJPZbDVZ+symuZfxpj++VkeGflz4yY7wlQsbTx15tu7axT3Xif5K0Jos+uhdi2vVq9IP+48cvXLiu1+qDn0eaLeWNpxY+c6v/eNDv43c/nK8bJn61cb46JvfDtADnpsV607v/PmDHeXXdg+HsPPc0ZFPl1yqGcQXja0ZXOrcM3hp2zcVj7NbR/2R0jOm8t0vlzSt+pC+dW4iIdaN/VT7VPzArQn82OKusUVy/8QbHdYN+ntt48cmtl9t/2vl9p1DB85/P5j6+Om9w7uG31+xYv2h0/sP3yw5eLiy4qXPbjith327/gyFhspL+haOX7t0w2Ubk5LHSwbHNvSvGzo++nr582cii6/fPrWg6ermvRcSl6++sm/50sm1/BsJcRd0+REAAA=='
+    query = 'Subaru+Impreza+WRX'
+    category_ids = '9800'  # Category ID for Cell Phones & Smartphones
+    limit = 100  # Limit the results to 5 items
+
+    result = ripley(api_key, query, category_ids, limit)
+    print(result['total'])
+    items = []
+    if 'itemSummaries' in result:
+        for item in result['itemSummaries']:
+            # if item['price']['value'] > 1999:
+            items.append({
+                'title': item['title'],
+                'cat': 'Cars',
+                'price': item['price']['value'],
+                'seller': item.get('seller', {}).get('username', 'Unknown'),
+                'url': item['itemWebUrl'],
+                'image': item['image']['imageUrl'],
+            })
+
+    return render_template('index2.html', items=items)
 
 
 if __name__ == '__main__':
