@@ -47,11 +47,15 @@ class Api {
 (async () => {
     try {
         const apiKey = (await fs.readFile('ebay_api_key', 'utf8')).trim();
-        const query = 'Ford+Fiesta';
+        let query = "";
+        for (let i = 2; i < process.argv.length; i++) {
+            query += process.argv[i] + "+";
+        }
+
         const categoryIds = '9801';
-        const limit = '100';
-        const filter = 'buyingOptions:{AUCTION|CLASSIFIED_AD|AUCTION_WITH_BIN|FIXED_PRICE|BEST_OFFER}';
-        const sort = 'price'; //if you want descending then its -price. ascending is 'price'
+        const limit = '10';
+        const filter = 'buyingOptions:{AUCTION|CLASSIFIED_AD|FIXED_PRICE|BEST_OFFER}';
+        const sort = 'price'; //'price'; //if you want descending then its -price. ascending is 'price'
 
         const api = new Api(apiKey, query);
         const params = {
@@ -74,41 +78,20 @@ class Api {
 
                 if (item.buyingOptions.includes('AUCTION')) {
                     itemData.price = item.currentBidPrice.value;
-                    itemData.seller = item.seller.username;
-                    itemData.url = item.itemWebUrl;
-                    itemData.image = item.image ? item.image.imageUrl : 'No image available';
-                    itemData.buyingOptions = item.buyingOptions;
                 } else if (item.buyingOptions.includes('CLASSIFIED_AD')) {
                     itemData.price = item.price.value;
-                    itemData.seller = item.seller.username;
-                    itemData.url = item.itemWebUrl;
-                    itemData.image = item.thumbnailImages ? item.thumbnailImages[0].imageUrl : 'No image available';
-                    itemData.buyingOptions = item.buyingOptions;
                 } else if (item.buyingOptions.includes('AUCTION_WITH_BIN')) {
                     itemData.price = item.price.value;
-                    itemData.seller = item.seller.username;
-                    itemData.url = item.itemWebUrl;
-                    itemData.image = item.thumbnailImages ? item.thumbnailImages[0].imageUrl : 'No image available';
-                    itemData.buyingOptions = item.buyingOptions;
                 } else if (item.buyingOptions.includes('FIXED_PRICE')) {
                     itemData.price = item.price.value;
-                    itemData.seller = item.seller.username;
-                    itemData.url = item.itemWebUrl;
-                    itemData.image = item.thumbnailImages ? item.thumbnailImages[0].imageUrl : 'No image available';
-                    itemData.buyingOptions = item.buyingOptions;
-                } else if (item.buyingOptions.includes('FIXED_PRICE')) {
-                    itemData.price = item.price.value;
-                    itemData.seller = item.seller.username;
-                    itemData.url = item.itemWebUrl;
-                    itemData.image = item.thumbnailImages ? item.thumbnailImages[0].imageUrl : 'No image available';
-                    itemData.buyingOptions = item.buyingOptions;
                 } else if (item.buyingOptions.includes('BEST_OFFER')) {
                     itemData.price = item.price.value;
-                    itemData.seller = item.seller.username;
-                    itemData.url = item.itemWebUrl;
-                    itemData.image = item.thumbnailImages ? item.thumbnailImages[0].imageUrl : 'No image available';
-                    itemData.buyingOptions = item.buyingOptions;
                 }
+
+                itemData.seller = item.seller.username;
+                itemData.url = item.itemWebUrl;
+                itemData.image = item.thumbnailImages ? item.thumbnailImages[0].imageUrl : 'No image available';
+                itemData.buyingOptions = item.buyingOptions;
 
                 items.push(itemData);
             });

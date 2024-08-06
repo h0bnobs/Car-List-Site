@@ -5,9 +5,9 @@ const port = 3000;
 let ebayData = null;
 
 // Function to run the API integration script
-function runApiIntegration() {
+function runApiIntegration(query) {
     return new Promise((resolve, reject) => {
-        exec('node apiIntegration.mjs', (error, stdout, stderr) => {
+        exec(`node apiIntegration.mjs ${query}`, (error, stdout, stderr) => {
             if (error) {
                 console.error(`Error executing API integration script: ${error.message}`);
                 return reject(error);
@@ -54,6 +54,33 @@ const app = http.createServer((req, res) => {
             }
             res.end();
         });
+    } else if (req.method === 'GET' && req.url.startsWith('/listings.html')) {
+        const query = new URL(req.url, `http://${req.headers.host}`).searchParams.get('query');
+        if (query) {
+            runApiIntegration(query)
+                .then(() => {
+                    fs.readFile('listings.html', (error, data) => {
+                        if (error) {
+                            res.writeHead(404);
+                            res.write('File not found');
+                        } else {
+                            res.writeHead(200, { 'Content-Type': 'text/html' });
+                            res.write(data);
+                        }
+                        res.end();
+                    });
+                })
+                .catch(error => {
+                    console.error('Error running API integration:', error);
+                    res.writeHead(500);
+                    res.write('Internal Server Error');
+                    res.end();
+                });
+        } else {
+            res.writeHead(400);
+            res.write('Bad Request');
+            res.end();
+        }
     } else if (req.method === 'GET' && req.url === '/data') {
         console.log('Sending data to client:', ebayData);
         res.writeHead(200, { 'Content-Type': 'application/json' });
@@ -65,14 +92,6 @@ const app = http.createServer((req, res) => {
 });
 
 // Start the server
-app.listen(port, async () => {
+app.listen(port, () => {
     console.log(`Server listening on port ${port}`);
-
-    // Wait for the server to be up before running the API integration
-    try {
-        await runApiIntegration();
-        console.log('API integration completed.');
-    } catch (error) {
-        console.error('Failed to run API integration:', error);
-    }
 });

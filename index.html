@@ -3,47 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>eBay Listings</title>
+    <title>Search for Cars</title>
 </head>
 <body>
-<h1>eBay Listings</h1>
-<div id="listings"></div>
+    <h1>Search for Cars</h1>
+    <form id="searchForm">
+        <label for="searchQuery">Enter car make/model:</label>
+        <input type="text" id="searchQuery" name="searchQuery" required>
+        <button type="submit">Search</button>
+    </form>
 
-<script>
-    // Function to fetch and display data
-    async function fetchData() {
-        try {
-            const response = await fetch('/data');
-            if (!response.ok) {
-                throw new Error('Network response was not ok: ' + response.statusText);
-            }
-            const data = await response.json();
-            const listingsDiv = document.getElementById('listings');
-            if (Array.isArray(data) && data.length > 0) {
-                data.forEach(item => {
-                    const itemDiv = document.createElement('div');
-                    itemDiv.innerHTML = `
-                            <h2>${item.title}</h2>
-                            <p>Listing type: ${item.buyingOptions}</p>
-                            <p>Price: ${item.price}</p>
-                            <a href="${item.url}" target="_blank">View on eBay</a>
-                            <br>
-                            <img src="${item.image}" alt="${item.title}" width="100">
-                            <hr>
-                        `;
-                    listingsDiv.appendChild(itemDiv);
-                });
-            } else {
-                listingsDiv.innerHTML = '<p>No listings available.</p>';
-            }
-        } catch (error) {
-            console.error('Error fetching eBay data:', error);
-            document.getElementById('listings').innerHTML = 'Error fetching data.';
-        }
-    }
-
-    // Fetch data on page load
-    window.onload = fetchData;
-</script>
+    <script>
+        document.getElementById('searchForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const query = document.getElementById('searchQuery').value;
+            console.log(query)
+            window.location.href = `listings.html?query=${encodeURIComponent(query)}`;
+        });
+    </script>
 </body>
 </html>
